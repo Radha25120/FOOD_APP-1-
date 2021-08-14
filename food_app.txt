@@ -1,0 +1,133 @@
+import pymysql
+mydb=pymysql.connect(host="localhost",user="root",password="Radhamuthu@123",db="food_app")
+mycursor=mydb.cursor()
+
+
+class hotel:
+    def ListOfHotels(self):
+        mycursor.execute("select * from hotel_list")
+        data1=mycursor.fetchall()
+        print(data1)
+        for i in data1:
+            print("h_id:",i[0],",","h_name:",i[1],",","h_address:",i[2],",","h_mobileNum:",i[3])
+        h_name=input("enter hotelName which you want:")
+        return h_name
+           
+            
+
+class order:
+    def __init__(self,h):
+        self.h=h
+    def listOfItems(self):
+        print("selected hotel name:",self.h)
+        mycursor.execute("select * from food_list")
+        data2=mycursor.fetchall()
+        print(data2)
+        f_name=input("enter food_item:")
+        mycursor.execute("select * from food_list where food_name like %s",(f_name,))
+        data3=mycursor.fetchall()
+        print(data3)
+        return f_name
+
+class cart:
+    def __init__(self,food):
+        self.food=food
+    def Cart_details(self):
+        mycursor.execute("select food_id,amount from food_list where food_name like %s",(food,))
+        data4=mycursor.fetchall()
+        print(data4)
+        count=int(input("print count value:"))
+        f_id=data4[0][0]
+        print(":::::::",f_id)
+        foodCost=data4[0][1]
+        print(foodCost,type(foodCost))
+        global totalcost          
+        totalcost=foodCost*count          
+        c_id=int(input("enter c_id:"))
+        mycursor.execute("insert into cart_detail(food_id,cart_id,selected_item,total_Amount)values(%s,%s,%s,%s)",(f_id,c_id,food,totalcost,))
+        mydb.commit()
+        return f_id
+
+class payment:
+    def paymentDetails(self):
+        mycursor.execute("select cus_id from login_details")
+        data5=mycursor.fetchall()
+        #print(data5[0][0])
+        CusID=data5[0][0]
+        mycursor.execute("select cart_id from cart_detail")
+        data6=mycursor.fetchall()
+        CartID=data6[0][0]
+        print("enter payment_id:")
+        payID=int(input())
+        payMethod=input("enter payment method :")
+        accNum=input("enter accountNum:")
+        year=int(input("enter year:"))
+        month=int(input("enter month:"))
+        cvv=int(input("enter cvv:"))
+        mycursor.execute("insert into payment_details( pay_id,cus_id,cart_id,pay_method,acc_num,year,month,cvv)values(%s,%s,%s,%s,%s,%s,%s,%s)",(payID, CusID,CartID,payMethod,accNum,year,month,cvv,))
+        mydb.commit()
+        print("sucessfully paid!!!!!")
+        return payID
+
+class delivery:
+    def __init__(self, payid):
+        self.payid=payid
+    def deliveryDetails(self):
+        print(".....",payid)
+        DelID=int(input("enter delivery id:"))
+        Del_time=input("enter delivery time:")
+        status=input("enter the status:")
+        comment=input("give your comment:")
+        mycursor.execute("insert into delivery_details(del_id,pay_id,del_time,status,comment)values(%s,%s,%s,%s,%s)",(DelID, payid,Del_time,status,comment,))
+        mydb.commit()
+        
+        
+        
+        
+if __name__=='__main__':
+    user_type=input("are you a user or adimin or newuser?"+'\n'+"type your destination:")
+    destination=user_type.lower()
+
+    if  destination=="newuser":
+        user_id=int(input("enter id:"))
+        username=str(input("enter your name:"))
+        mail=input("enter your  mail:")
+        password=input("enter your passwd:")
+        age=input("enter your age:")
+        mobile_num=input("enter your mob_num :")
+        address=input("enter your adress:")
+        mycursor.execute("insert into login_details(cus_id,cus_name,mail,password,age,mobileNum,address) values(%s,%s,%s,%s,%s,%s,%s)",(user_id,username,mail,password,age,mobile_num,address,))
+        mydb.commit()
+        
+    if  destination=="user":
+        username=input("enter your name:")
+        password=input("enter your passwd:")
+        mycursor.execute("select * from login_details where cus_name like %s",(username,))
+        data=mycursor.fetchall()
+        print(data)
+
+        print("go to hotel details")
+        ob1=hotel()
+        h=ob1.ListOfHotels()
+        print("go to order table:")
+     
+        ob2=order(h)
+        food=ob2. listOfItems()
+        print("go to cart_details:")
+        
+        ob3=cart(food)
+        foodID=ob3.Cart_details()
+        print("go to payment:")
+        ob4=payment()
+        payid=ob4. paymentDetails()
+
+        print("go to delivery_details:")
+        ob5=delivery(payid)
+        ob5.deliveryDetails()
+        
+        
+        
+        
+                    
+
+   
